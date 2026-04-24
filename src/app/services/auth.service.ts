@@ -2,6 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 interface LoginResponse {
   token: string;
@@ -13,7 +14,7 @@ interface LoginResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly api = 'http://localhost:4000';
+private readonly api = `${environment.apiBaseUrl}`;
   private readonly tokenKey = 'swamp_token';
   private readonly authStateSubject = new BehaviorSubject<boolean>(this.hasToken());
 

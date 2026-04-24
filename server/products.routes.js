@@ -1,7 +1,9 @@
-﻿const express = require('express');
+const express = require('express');
 const pool = require('./db');
+const mockProducts = require('./mock-products');
 
 const router = express.Router();
+const canUseFallback = process.env.NODE_ENV !== 'production' || process.env.ALLOW_PRODUCT_FALLBACK === 'true';
 
 router.get('/', async (_req, res) => {
   try {
@@ -9,9 +11,16 @@ router.get('/', async (_req, res) => {
       'SELECT id, name, description, price, image_url FROM products WHERE active = 1 ORDER BY id DESC'
     );
 
+    if (!rows.length && canUseFallback) {
+      return res.json(mockProducts);
+    }
+
     return res.json(rows);
   } catch (err) {
     console.error(err);
+    if (canUseFallback) {
+      return res.json(mockProducts);
+    }
     return res.status(500).json({ message: 'Failed to fetch products' });
   }
 });
@@ -30,12 +39,24 @@ router.get('/:id', async (req, res) => {
     );
 
     if (!rows.length) {
+      if (canUseFallback) {
+        const fallbackProduct = mockProducts.find((product) => product.id === productId);
+        if (fallbackProduct) {
+          return res.json(fallbackProduct);
+        }
+      }
       return res.status(404).json({ message: 'Product not found' });
     }
 
     return res.json(rows[0]);
   } catch (err) {
     console.error(err);
+    if (canUseFallback) {
+      const fallbackProduct = mockProducts.find((product) => product.id === productId);
+      if (fallbackProduct) {
+        return res.json(fallbackProduct);
+      }
+    }
     return res.status(500).json({ message: 'Failed to fetch product' });
   }
 });

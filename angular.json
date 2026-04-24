@@ -21,6 +21,7 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
+              "src/_redirects",
               {
                 "glob": "sitemap.xml",
                 "input": "src",
@@ -42,8 +43,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "5kb",
+                  "maximumError": "1mb"
                 }
               ],
               "fileReplacements": [
@@ -93,6 +94,7 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
+              "src/_redirects",
               {
                 "glob": "sitemap.xml",
                 "input": "src",

@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Product } from '../models/product';
 import { AuthService } from './auth.service';
+import { environment } from 'src/environments/environment';
 
 interface CheckoutPayloadItem {
   productId: number;
@@ -59,7 +60,7 @@ interface TourBookingPayload {
 
 @Injectable({ providedIn: 'root' })
 export class ShopService {
-  private readonly api = 'http://localhost:4000';
+  private readonly api = `${environment.apiBaseUrl}`;
 
   constructor(
     private readonly http: HttpClient,

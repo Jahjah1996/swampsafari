@@ -1,6 +1,6 @@
 <section class="hero">
   <div class="hero-text">
-    <span class="badge">Eco Adventure · Wildlife · Heritage</span>
+    <span class="badge">Eco Adventure - Wildlife - Heritage</span>
     <h2>Discover the Wild Heart of Falmouth at Swamp Safari</h2>
     <p>
       Step into the lush wetlands of Trelawny and get up close with Jamaican crocodiles,
@@ -14,7 +14,7 @@
     <ul class="hero-list">
       <li>Guided swamp tours with trained wildlife guides</li>
       <li>Safe viewing platforms and photo spots</li>
-      <li>Educational experience about Jamaica’s wetlands</li>
+      <li>Educational experience about Jamaica's wetlands</li>
     </ul>
   </div>
 
@@ -30,16 +30,20 @@
         <h3>Watch the Experience</h3>
         <p>Take a look at what we have to offer</p>
         <div class="video-wrapper">
-          <iframe
-            src="/assets/videos/SCHOOL TRIP TO JAMAICA SWAMP SAFARI VILLAGE🇯🇲FALMOUTH, TRELAWNY.mp4"
-            title="Swamp Safari Tour Highlight"
-            frameborder="0"
-            allowfullscreen>
-          </iframe>
+          <video
+            #tourVideo
+            controls
+            muted
+            playsinline
+            (loadedmetadata)="enforceMuted(tourVideo)"
+            (volumechange)="enforceMuted(tourVideo)"
+            aria-label="Swamp Safari Tour Highlight">
+            <source src="/assets/videos/SCHOOL TRIP TO JAMAICA SWAMP SAFARI VILLAGE🇯🇲FALMOUTH, TRELAWNY.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
         </div>
       </div>
 
-     
       <div class="media-card">
         <h3>Colourful Wetland Wildlife</h3>
         <p>Meet some of the vibrant birdlife you might see around the swamp.</p>

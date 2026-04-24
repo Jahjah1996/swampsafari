@@ -1,9 +1,13 @@
-﻿const express = require('express');
+const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('./db');
+const mockUsers = require('./mock-users');
 
 const router = express.Router();
+const canUseFallback = process.env.NODE_ENV !== 'production' || process.env.ALLOW_AUTH_FALLBACK === 'true';
+const fallbackUsers = [...mockUsers];
+let nextFallbackId = fallbackUsers.reduce((max, user) => Math.max(max, user.id), 0) + 1;
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
@@ -11,6 +15,14 @@ function isValidEmail(value) {
 
 function isStrongPassword(value) {
   return typeof value === 'string' && value.length >= 8 && value.length <= 72;
+}
+
+function issueToken(user) {
+  return jwt.sign(
+    { userId: user.id, email: user.email },
+    process.env.JWT_SECRET || 'dev-secret',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+  );
 }
 
 router.post('/register', async (req, res) => {
@@ -46,6 +58,25 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ message: 'Email already exists' });
     }
 
+    if (canUseFallback) {
+      const existing = fallbackUsers.find((user) => user.email === normalizedEmail);
+      if (existing) {
+        return res.status(409).json({ message: 'Email already exists' });
+      }
+
+      const newUser = {
+        id: nextFallbackId++,
+        email: normalizedEmail,
+        password
+      };
+      fallbackUsers.push(newUser);
+
+      return res.status(201).json({
+        id: newUser.id,
+        email: newUser.email
+      });
+    }
+
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
@@ -71,6 +102,16 @@ router.post('/login', async (req, res) => {
     const [rows] = await pool.query('SELECT id, email, password_hash FROM users WHERE email = ?', [normalizedEmail]);
 
     if (!rows.length) {
+      if (canUseFallback) {
+        const fallbackUser = fallbackUsers.find((user) => user.email === normalizedEmail && user.password === password);
+        if (fallbackUser) {
+          const token = issueToken(fallbackUser);
+          return res.json({
+            token,
+            user: { id: fallbackUser.id, email: fallbackUser.email }
+          });
+        }
+      }
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -81,17 +122,24 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
-    );
+    const token = issueToken(user);
 
     return res.json({
       token,
       user: { id: user.id, email: user.email }
     });
   } catch (err) {
+    if (canUseFallback) {
+      const fallbackUser = fallbackUsers.find((user) => user.email === normalizedEmail && user.password === password);
+      if (fallbackUser) {
+        const token = issueToken(fallbackUser);
+        return res.json({
+          token,
+          user: { id: fallbackUser.id, email: fallbackUser.email }
+        });
+      }
+    }
+
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
